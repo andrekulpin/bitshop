@@ -1,2 +1,4 @@
 node_modules/
 tests.js
+test2.js
+dump.rdb

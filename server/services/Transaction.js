@@ -58,6 +58,7 @@ class Transaction {
 		})
 		const hex = self.tx.build().toHex();
 		const res = yield blockchain.pushtx( hex );
+		return res;
 	}
 
 }
