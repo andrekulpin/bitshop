@@ -1,48 +1,63 @@
 const _ = require('lodash');
 const Bitcoin = require('bitcoinjs-lib');
-const Blockchain = require('blockchain.info');
+const blockchain = require('blockchain.info/pushtx');
 
 class Transaction {
-
 	constructor(){
 		this.tx = new Bitcoin.TransactionBuilder();
 		this.steps = [];
+		this.address = null;
+		this.pool = 0;
+		this.fee = 0.0001 * 100000000;
 		this.keyPairs = [];
 	}
 
-	from( wallet ){
+	from( address ){
 		const self = this;
-		self.steps.push(function*(){
-			const keyPair = Bitcoin.ECPair.fromWIF( wallet );
-			const address = keyPair.getAddress();
-			const txID = yield Blockchain.blockexplorer.getUnspentOutputs( address );
-			const index = self.keyPairs.length;
-			self.tx.addInput( txID, index );
-			self.keyPairs.push( keyPair );
+		self.steps.push(function * (){
+			self.address = address;
+			const res = yield {
+				balance: address.getBalance(),
+				txID: address.getPrevTXID()
+			}
+			self.balance = res.balance;
+			self.tx.addInput( res.txID, self.keyPairs.length );
+			self.balance = yield address.getBalance();
+			self.keyPairs.push( address.keyPair );
 		});
 		return self;
 	}
 
 	to( address, amount ){
-		this.tx.addOutput( address, amount );
-		return this;
-	}
-
-	sign(){
-		//add another step
-		_.each( this.keyPairs, ( keyPair, index ) => {
-			this.tx.sign( 0, keyPair );
+		const self = this;
+		self.steps.push(function * (){
+			if( !amount ){
+				amount = self.balance - self.pool;
+				self.tx.addOutput( address, amount );
+				return;
+			}
+			if( self.balance < amount || self.fee >= amount ){
+				throw new Error('Insufficient gold.');
+			}
+			self.pool += amount;
+			self.tx.addOutput( address, ( amount - self.fee ) );
 		});
-		return this;
+		return self;
 	}
 
-	*execute( callback ){
+	*execute(){
+		const self = this;
 		let step;
-		while( step = this.steps.shift() ){
+		while( step = self.steps.shift() ){
+
 			yield step();
+
 		}
-		const hex = this.tx.build().toHex();
-		return yield blockchain.pushtx( hex );
+		_.each( self.keyPairs, ( keyPair, index ) => {
+			self.tx.sign( index, keyPair );
+		})
+		const hex = self.tx.build().toHex();
+		const res = yield blockchain.pushtx( hex );
 	}
 
 }

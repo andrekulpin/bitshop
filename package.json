@@ -11,8 +11,10 @@
   "dependencies": {
     "bitcoinjs-lib": "^2.3.0",
     "blockchain.info": "^2.6.0",
+    "chai": "^3.5.0",
     "co": "^4.6.0",
     "koa": "^1.2.4",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "satoshi-bitcoin": "^1.0.4"
   }
 }

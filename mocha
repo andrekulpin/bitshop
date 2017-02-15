@@ -1,0 +1,4 @@
+#!/bin/bash
+export NODE_PATH=$NODE_PATH:.
+
+mocha -v --bail tests.js

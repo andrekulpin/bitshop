@@ -1,35 +1,28 @@
 const Bitcoin = require('bitcoinjs-lib');
-const bigi = require('bigi')
+const { blockexplorer } = require('blockchain.info');
+const converter = require('satoshi-bitcoin');
 
 class Address {
 
-	constructor( salt ){
-		this.salt = salt || getRandInt();
+	constructor( wif ){
+		const keyPair = wif 
+			? Bitcoin.ECPair.fromWIF( wif ) 
+			: Bitcoin.ECPair.makeRandom();
+		this.keyPair = keyPair;
+		this.address = keyPair.getAddress();
+		this.wif = wif || keyPair.toWIF();
 	}
 
-	getRandom(){
-		const keyPair = Bitcoin.ECPair.makeRandom();
-		return {
-			address: keyPair.getAddress(),
-			privKey: keyPair.toWIF()
-		} 
+	*getBalance(){
+		return ( yield blockexplorer.getAddress( this.address ) ).final_balance;
 	}
 
-	getAddressBySalt(){
-		const hash = Bitcoin.crypto.sha256( this.salt );
-		const d = bigi.fromBuffer( hash );
-		const keyPair = new Bitcoin.ECPair( d );
-		return {
-			address: keyPair.getAddress(),
-			privKey: keyPair.toWIF()
-		}
+	*getPrevTXID(){
+		return ( yield blockexplorer.getUnspentOutputs( this.address ) )
+		.unspent_outputs[0]
+		.tx_hash_big_endian;
 	}
 
 }
-
-function getRandInt(){
-	return ~~( Math.random() * 0xfffffff );
-}
-
 
 module.exports = Address;

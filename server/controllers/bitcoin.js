@@ -9,9 +9,9 @@ module.exports = {
 		const wallet = yield db.getWallet();
 
 		const signedTx = tx
-		.from( wallet )
-		.to( userAddress, amount )
-		.sign();
+			.from( wallet )
+			.to( userAddress, amount )
+			.sign()
 
 		yield signedTx.execute();
 		
