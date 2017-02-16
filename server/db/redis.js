@@ -1,11 +1,7 @@
 const redis = require( 'redis' );
 const P = require( 'bluebird' );
 P.promisifyAll( redis.RedisClient.prototype );
-
-module.exports = function( config ){
-	const client = redis.createClient( config );
-	return new RedisClient( client );
-}
+var client = null;
 
 class RedisClient {
 
@@ -19,6 +15,18 @@ class RedisClient {
 
 	*set( set, value ){
 		return yield this.client.setAsync( key, value );
+	}
+
+	*incrby( key, value ){
+		return yield this.client.incrbyAsync( key, value );
+	}
+
+	*decrby( key, value ){
+		return yield this.client.decrbyAsync( key, value );
+	}
+
+	*exists( key ){
+		return yield this.client.existsAsync( key );
 	}
 
 	*srandmember( key ){
@@ -37,4 +45,9 @@ class RedisClient {
 		return yield this.client.spopAsync( key );
 	}
 
+}
+
+module.exports = function( config ){
+	client = client || redis.createClient( config );
+	return new RedisClient( client );
 }

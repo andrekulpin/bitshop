@@ -57,7 +57,7 @@ class Transaction {
 			self.tx.sign( index, keyPair );
 		})
 		const hex = self.tx.build().toHex();
-		const res = yield blockchain.pushtx( hex );
+		const res = {}//yield blockchain.pushtx( hex );
 		return res;
 	}
 

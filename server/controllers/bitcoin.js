@@ -13,11 +13,6 @@ module.exports = {
 		const address = new Address( wif );
 		const change = new Address();
 		
-		console.log('wif: ', wif);
-		console.log('wif_address', address.address);
-		console.log('newAddress', change.address);
-		console.log('newWIF', change.wif);
-
 		const signedTx = tx
 			.from( address )
 			.to( userAddress, amount )
@@ -25,7 +20,6 @@ module.exports = {
 
 		const res = yield signedTx.execute();
 		yield model.saveNewWallet( change.wif );
-		console.log(res);
 		//yield model.storeRecord( change.wif,  )
 		
 	}
